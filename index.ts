@@ -20,6 +20,12 @@
     'use strict';
     return function (boundTransportFn: Function) {
 
+        const str = String(boundTransportFn);
+
+        if(/console\.log\(/.test(str)){
+            throw new Error(' => If you call console.log() inside the bound function, you will get a stack overflow error.');
+        }
+
         Object.keys(console).forEach(function (key) {
 
             let f;
@@ -28,12 +34,10 @@
 
                 console[key] = function () {
 
-                    Object.values(arguments).forEach(function (a) {
-                        boundTransportFn(a, key);
-                    });
+                    const data = Object.values(arguments).join(' ');
+                    boundTransportFn(data, key);
 
                     f.apply(console, arguments);
-
                 };
             }
         });

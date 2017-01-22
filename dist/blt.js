@@ -17,9 +17,8 @@
             var f;
             if ((f = console[key]) && typeof f === 'function') {
                 console[key] = function () {
-                    Object.values(arguments).forEach(function (a) {
-                        boundTransportFn(a, key);
-                    });
+                    var data = Object.values(arguments).join(' ');
+                    boundTransportFn(data, key);
                     f.apply(console, arguments);
                 };
             }

@@ -2,7 +2,7 @@
   "name": "browser-logging-transport",
   "version": "0.0.1001",
   "description": "Send logging data from browser to server",
-  "main": "index.js",
+  "main": "dist/blt.js",
   "directories": {
     "test": "test"
   },
