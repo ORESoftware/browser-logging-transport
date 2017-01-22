@@ -1,0 +1,36 @@
+{
+  "name": "browser-logging-transport",
+  "version": "0.0.1001",
+  "description": "Send logging data from browser to server",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "suman"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ORESoftware/browser-logging-transport.git"
+  },
+  "keywords": [
+    "logging",
+    "browser",
+    "chrome",
+    "data",
+    "streaming",
+    "transfer",
+    "transport",
+    "log",
+    "stdout",
+    "stderr"
+  ],
+  "author": "Olegzandr",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ORESoftware/browser-logging-transport/issues"
+  },
+  "homepage": "https://github.com/ORESoftware/browser-logging-transport#readme"
+}
