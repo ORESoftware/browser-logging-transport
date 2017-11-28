@@ -18,7 +18,7 @@
 }(this, function () {
 
     'use strict';
-    return function (boundTransportFn: Function) {
+    return function (boundTransportFn: (a: any, key: string) => void) {
 
         const str = String(boundTransportFn);
 
