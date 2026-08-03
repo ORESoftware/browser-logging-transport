@@ -18,9 +18,11 @@
 
   'use strict';
 
+  type Transport = (data: string, key: string) => void;
+
   const states = new WeakMap<object, {
     originals: Map<string, Function>,
-    transports: Set<(data: string, key: string) => void>,
+    transports: Map<Transport, number>,
     dispatching: boolean
   }>();
 
@@ -29,7 +31,7 @@
   ];
 
   return function attachBrowserLoggingTransport(
-    boundTransportFn: (data: string, key: string) => void
+    boundTransportFn: Transport
   ): () => void {
 
     if (typeof boundTransportFn !== 'function') {
@@ -42,7 +44,7 @@
     if (!state) {
       state = {
         originals: new Map<string, Function>(),
-        transports: new Set<(data: string, key: string) => void>(),
+        transports: new Map<Transport, number>(),
         dispatching: false
       };
       states.set(target, state);
@@ -62,7 +64,7 @@
             state.dispatching = true;
             try {
               const data = args.map(String).join(' ');
-              Array.from(state.transports).forEach(function (transport) {
+              Array.from(state.transports.keys()).forEach(function (transport) {
                 try {
                   transport(data, key);
                 }
@@ -81,7 +83,10 @@
       });
     }
 
-    state.transports.add(boundTransportFn);
+    state.transports.set(
+      boundTransportFn,
+      (state.transports.get(boundTransportFn) || 0) + 1
+    );
     let attached = true;
 
     return function detachBrowserLoggingTransport() {
@@ -89,7 +94,14 @@
         return;
       }
       attached = false;
-      state.transports.delete(boundTransportFn);
+
+      const subscriptionCount = state.transports.get(boundTransportFn) || 0;
+      if (subscriptionCount > 1) {
+        state.transports.set(boundTransportFn, subscriptionCount - 1);
+      }
+      else {
+        state.transports.delete(boundTransportFn);
+      }
 
       if (state.transports.size < 1) {
         state.originals.forEach(function (original, key) {
