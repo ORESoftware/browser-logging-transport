@@ -25,7 +25,7 @@
         if (!state) {
             state = {
                 originals: new Map(),
-                transports: new Set(),
+                transports: new Map(),
                 dispatching: false
             };
             states.set(target, state);
@@ -42,7 +42,7 @@
                         state.dispatching = true;
                         try {
                             var data = args.map(String).join(' ');
-                            Array.from(state.transports).forEach(function (transport) {
+                            Array.from(state.transports.keys()).forEach(function (transport) {
                                 try {
                                     transport(data, key);
                                 }
@@ -59,14 +59,20 @@
                 };
             });
         }
-        state.transports.add(boundTransportFn);
+        state.transports.set(boundTransportFn, (state.transports.get(boundTransportFn) || 0) + 1);
         var attached = true;
         return function detachBrowserLoggingTransport() {
             if (!attached) {
                 return;
             }
             attached = false;
-            state.transports.delete(boundTransportFn);
+            var subscriptionCount = state.transports.get(boundTransportFn) || 0;
+            if (subscriptionCount > 1) {
+                state.transports.set(boundTransportFn, subscriptionCount - 1);
+            }
+            else {
+                state.transports.delete(boundTransportFn);
+            }
             if (state.transports.size < 1) {
                 state.originals.forEach(function (original, key) {
                     target[key] = original;
