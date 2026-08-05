@@ -17,31 +17,98 @@
 }(this, function () {
 
   'use strict';
-  return function (boundTransportFn: (a: any, key: string) => void) {
 
-    const str = String(boundTransportFn);
+  type Transport = (data: string, key: string) => void;
 
-    if (/console\.log\(/.test(str)) {
-      throw new Error(' => If you call console.log() inside the bound function, you will get a stack overflow error.');
+  const states = new WeakMap<object, {
+    originals: Map<string, Function>,
+    transports: Map<Transport, number>,
+    dispatching: boolean
+  }>();
+
+  const knownMethods = [
+    'assert', 'debug', 'error', 'info', 'log', 'table', 'trace', 'warn'
+  ];
+
+  return function attachBrowserLoggingTransport(
+    boundTransportFn: Transport
+  ): () => void {
+
+    if (typeof boundTransportFn !== 'function') {
+      throw new TypeError('browser-logging-transport requires a transport function.');
     }
 
-    Object.keys(console).forEach(function (key) {
+    const target: any = console;
+    let state = states.get(target);
 
-      let f;
+    if (!state) {
+      state = {
+        originals: new Map<string, Function>(),
+        transports: new Map<Transport, number>(),
+        dispatching: false
+      };
+      states.set(target, state);
 
-      if ((f = console[key]) && typeof f === 'function') {
+      const methodNames = Array.from(new Set(Object.keys(target).concat(knownMethods)));
+      methodNames.forEach(function (key) {
+        const original = target[key];
+        if (typeof original !== 'function') {
+          return;
+        }
 
-        console[key] = function () {
+        state.originals.set(key, original);
+        target[key] = function () {
+          const args = Array.prototype.slice.call(arguments);
 
-          const data = Object.values(arguments).join(' ');
-          boundTransportFn(data, key);
+          if (!state.dispatching) {
+            state.dispatching = true;
+            try {
+              const data = args.map(String).join(' ');
+              Array.from(state.transports.keys()).forEach(function (transport) {
+                try {
+                  transport(data, key);
+                }
+                catch (err) {
+                  // A logging transport must never suppress the application log.
+                }
+              });
+            }
+            finally {
+              state.dispatching = false;
+            }
+          }
 
-          f.apply(console, arguments);
+          return original.apply(target, args);
         };
-      }
-    });
+      });
+    }
 
+    state.transports.set(
+      boundTransportFn,
+      (state.transports.get(boundTransportFn) || 0) + 1
+    );
+    let attached = true;
+
+    return function detachBrowserLoggingTransport() {
+      if (!attached) {
+        return;
+      }
+      attached = false;
+
+      const subscriptionCount = state.transports.get(boundTransportFn) || 0;
+      if (subscriptionCount > 1) {
+        state.transports.set(boundTransportFn, subscriptionCount - 1);
+      }
+      else {
+        state.transports.delete(boundTransportFn);
+      }
+
+      if (state.transports.size < 1) {
+        state.originals.forEach(function (original, key) {
+          target[key] = original;
+        });
+        states.delete(target);
+      }
+    };
   }
 });
-
-
