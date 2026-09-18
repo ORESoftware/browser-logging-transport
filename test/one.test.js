@@ -1,26 +1,10 @@
-/**
- * Created by oleg on 1/21/17.
- */
+'use strict';
 
+const assert = require('node:assert/strict');
+const test = require('node:test');
 
-const blt = require('browser-logging-transport');
+const attachBrowserLoggingTransport = require('../dist/blt.js');
 
-const fs = require('fs');
-
-const strm = fs.createWriteStream('output.log');
-
-
-blt(function(data, level){
-
-    strm.write(level);
-    strm.write(data);
-
+test('published CommonJS artifact exports the transport attachment function', () => {
+  assert.equal(typeof attachBrowserLoggingTransport, 'function');
 });
-
-
-console.log('jim');
-
-console.warn('bob');
-
-
-
