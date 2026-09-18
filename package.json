@@ -1,7 +1,7 @@
 {
   "name": "browser-logging-transport",
   "version": "0.0.1001",
-  "description": "Send logging data from browser to server",
+  "description": "Forward browser console calls to detachable logging transports without suppressing application logs",
   "main": "dist/blt.js",
   "directories": {
     "test": "test"
@@ -9,7 +9,8 @@
   "dependencies": {},
   "devDependencies": {},
   "scripts": {
-    "test": "suman"
+    "test": "node --test test/*.test.js",
+    "test:e2e": "npm test"
   },
   "repository": {
     "type": "git",
@@ -32,5 +33,8 @@
   "bugs": {
     "url": "https://github.com/ORESoftware/browser-logging-transport/issues"
   },
-  "homepage": "https://github.com/ORESoftware/browser-logging-transport#readme"
+  "homepage": "https://github.com/ORESoftware/browser-logging-transport#readme",
+  "engines": {
+    "node": ">=18"
+  }
 }
